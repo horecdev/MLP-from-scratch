@@ -13,8 +13,7 @@ class Embedding:
         self.batch_size = indices.shape[0]
         self.input_cache = indices
         
-        embeds = self.weights[indices] # (B, seq_len, embedding_dim)
-        return embeds.reshape(self.batch_size, -1) # (B, seq_len * embedding_dim)
+        return self.weights[indices] # (B, seq_len, embedding_dim)
     
     def backward(self, grad_output: Tensor) -> None:
         self.dW = np.zeros_like(self.weights)
@@ -80,7 +79,9 @@ class ReLU:
         return relu_grad * grad_output # Element-wise multiplication (same shapes)
     
 class SoftmaxCrossEntropy: # in backward implementation we use a shortcut, which if we implemented them separately
-    # would make us potentially do math like tiny number * huge number what is pointless and prone to errors (it happens in chain rule)
+    # would make us potentially do math like tiny number * huge number what is pointless and prone to errors (it happens in chain rule
+    # between Softmax and Loss.) Doing the combined approach lets us omit that
+    
     # If we need softmax during inference we just write a short softmax() func, we dont really need anything else.
     # Softmax is for single class output problems as the probs sum to 1, we cant have two correct classes
     def __init__(self):

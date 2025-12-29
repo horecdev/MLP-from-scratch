@@ -49,13 +49,29 @@ class SoftmaxCrossEntropy: # e^x explodes quickly, so we implement softmax and l
         self.logits: Tensor | None = None
         self.targets: Tensor | None = None
         self.probs: Tensor | None = None # This is the softmax output
+        
     def forward(self, logits: Tensor, targets: Tensor) -> float:
-        self.logits = logits
-        self.targets = targets
+        self.logits = logits # (B, output_size)
+        self.targets = targets # (B, output_size) 
         # First we offset the logits so that max value is 0 -> prevents np.exp() from totally exploding into inf. 
         # Math in this case is exactly the same
         max_logits = np.max(logits, axis=1, keepdims=True) # (B, 1)
         shifted_logits = logits - max_logits # (B, output_size)
+        
+        exp_logits = np.exp(shifted_logits) # (B, output_size)
+        sum_exp = np.sum(sum_exp, axis=1, keepdims=True) # (B, 1)
+        self.probs = exp_logits / sum_exp # (B, output_size)
+        
+        # cross-entropy loss is -log of probability of correct class, lets assume ours is one-hot encoded 
+        # and we will apply for it later in sampling / training
+        
+        log_probs = np.log(self.probs) # (B, output_size)
+        log_probs = log_probs * targets # Eliminates all other classes that weren't one-hot encoded
+        batch_loss = -np.sum(log_probs, axis=1) # (B)
+        batch_loss = np.mean(batch_loss, axis=0)
+        
+        return batch_loss
+        
         
         
     

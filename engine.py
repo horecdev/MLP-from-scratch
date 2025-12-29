@@ -50,22 +50,22 @@ class Linear:
         
         self.input_cache: Tensor | None = None
         
-        def forward(self, x: Tensor) -> Tensor:
-            # x is of shape (B, input_size)
-            # returns (B, output_size)
-            self.input_cache = x # Saves what was inputted to then do backward pass
-            return x @ self.weights + self.bias
+    def forward(self, x: Tensor) -> Tensor:
+        # x is of shape (B, input_size)
+        # returns (B, output_size)
+        self.input_cache = x # Saves what was inputted to then do backward pass
+        return x @ self.weights + self.bias
+    
+    def backward(self, grad_output: Tensor) -> Tensor:
+        # grad_output has to be of shape (B, output_size)
         
-        def backward(self, grad_output: Tensor) -> Tensor:
-            # grad_output has to be of shape (B, output_size)
-            
-            self.dW = self.input_cache.T @ grad_output # (input_size, output_size)
-            
-            self.db = np.sum(grad_output, axis=0, keepdims=True) # (1, output_size)
-            
-            grad_input = grad_output @ self.weights.T # (B, input_size)
-            
-            return grad_input
+        self.dW = self.input_cache.T @ grad_output # (input_size, output_size)
+        
+        self.db = np.sum(grad_output, axis=0, keepdims=True) # (1, output_size)
+        
+        grad_input = grad_output @ self.weights.T # (B, input_size)
+        
+        return grad_input
         
 class ReLU:
     def __init__(self):

@@ -17,12 +17,12 @@ class Embedding:
         return embeds.reshape(self.batch_size, -1) # (B, seq_len * embedding_dim)
     
     def backward(self, grad_output: Tensor) -> None:
-        self.grad = np.zeros_like(self.weights)
+        self.dW = np.zeros_like(self.weights)
         
-        np.add.at(self.grad, self.input_cache, grad_output)
+        np.add.at(self.dW, self.input_cache, grad_output)
         # Iterates through input_cache and grad_output in parallel
         # Looks at index in input_cache[a, b], takes vector at grad_output[a, b]
-        # and adds it in self.grad in place indicated by index
+        # and adds it in self.dW in place indicated by index
         # The index was "which one of the vectors in weights did I take?"
         # The vector at grad_output is "I took this vector from embeds, how does it influence the loss?"
         # If you add how it influences the loss to the embedding vector of the item you took,
@@ -157,8 +157,9 @@ class MLP:
     def step(self, learning_rate):
         # Manual SGD
         for layer in self.layers:
-            if hasattr(layer, 'weights'):
+            if hasattr(layer, 'weights') and layer.dW is not None:
                 layer.weights -= learning_rate * layer.dW
+            if hasattr(layer, 'bias') and layer.db is not None:
                 layer.bias -= learning_rate * layer.db
                 
                 
